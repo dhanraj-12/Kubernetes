@@ -1,101 +1,177 @@
-# Kubernetes
+# Kubernetes (K8s)
 
-## k8's cluster 
-- Bunch of Nodes is called a cluster
+## Kubernetes Cluster
+- A **cluster** is a collection of **nodes** that work together to run containerized applications.
+- All nodes in a cluster run Kubernetes components and are managed centrally.
 
+---
 
-## Master vs Worker node
+## Control Plane vs Worker Nodes
 
-1. Developer talk to Master node and then Master node tracks and manages the worker node 
-2. Master node take Declarative command from developer and perform them 
+1. Developers interact with the **Control Plane** using declarative configurations (YAML).
+2. The Control Plane continuously ensures the **desired state** matches the **current state**.
+3. Workloads actually run on **Worker Nodes**.
 
-## jargons 
+---
 
-### Nodes: 
-- In kuberenetes we can create and connect various machine togethere, all of which is running kubernetes. Every machine here is know as node
-- Two type of node: 
-    - Master Node
-    - Worker Node
+## Kubernetes Terminology
 
+### Nodes
+- A **node** is a machine (physical or virtual) that runs Kubernetes.
+- Types of nodes:
+  - **Control Plane Node**
+  - **Worker Node**
 
-### Master Node: 
-Master Node has 4 main thing:- 
-- API Server 
-- etcd 
-- kube-scheduler 
-- kube-controller-manger
+---
 
-    #### 1. API Server: 
-    The Api Server is gateway to the Kubernetes cluster. It processes all the managment request, whether from the cli(kubctl), ui dashboard or automation tool
+## Control Plane Node
 
-    #### 2. etcd(Distribute key-value store):
-    etcd serves as Kubernetes’ single source of truth, storing all cluster data, including:
+The Control Plane manages the entire cluster and makes global decisions.
 
-    -  Configuration settings.
-    -  Secrets and credentials.
-    -  Current and historical states of      workloads.
+### Core Components
 
-    #### 3. Kube-Schedule:
+#### 1. kube-apiserver
+- The **entry point** to the Kubernetes cluster.
+- Handles all requests from:
+  - `kubectl`
+  - UI dashboards
+  - Automation tools
+- Validates and processes REST API requests.
 
-    The Scheduler assigns Podds to worker nod, considering factors like
-    
-    - Resources availabilty
-    - Node affinit and anti-affinity rules 
-    
-    *Affinity* : I want to be placed near/ on this kinf of node or pod 
+---
 
-    *Anti-Affinity* : I dont want to be placed near/ on this kinf of node or pod 
+#### 2. etcd (Distributed Key-Value Store)
+- The **single source of truth** for the cluster.
+- Stores:
+  - Cluster configuration
+  - Secrets and credentials
+  - Desired and current state of workloads
+- Highly available and strongly consistent.
 
+---
 
-    #### 4. Kube-controller-manger:
-    Kubernetes operates on the controller pattern, where controllers monitor the system’s state and take corrective actions. The Controller Manager oversees these controllers, ensuring essential functions such as:
+#### 3. kube-scheduler
+- Decides **which worker node** a Pod should run on.
+- Considers:
+  - Resource availability (CPU, memory)
+  - Node affinity and anti-affinity
+  - Pod affinity and anti-affinity
+  - Taints and tolerations
+- **Does not run Pods**, only selects nodes.
 
-    - Scaling workload based on demand
-    - Managing failed nodes and rescheduling workloads
-    - Enforcing desired states(e.g: ensuring Deployment always runs the specified number of replicas)
+**Affinity**
+- Defines where a Pod *prefers* to be scheduled.
 
-    #### 5. Cloud Controller Manager: 
-    For Cloude-based kubernetes deployment, the Cloude Controller Manager integrates the cluster with cloud provider serives, handling: 
+**Anti-Affinity**
+- Defines where a Pod *should not* be scheduled.
 
-    - Provisiongin laod balancers
-    - Allocating persistent storage volumnes
-    - Scaling infrastrucre dynamically(e.g: adding virtual machine as nodes)
+---
 
+#### 4. kube-controller-manager
+- Runs controllers that continuously watch cluster state.
+- Ensures the desired state is maintained, such as:
+  - Restarting failed Pods
+  - Scaling workloads
+  - Maintaining replica counts for Deployments
+- Works on a reconciliation loop.
 
-### Worker Node: 
-It has 3 main thing: 
+---
 
-- kubelet: the node agent
-- kube-Proxy: Networking and laod balancing
-- Container Runtime: Running the containers 
+#### 5. cloud-controller-manager (Cloud Environments Only)
+- Integrates Kubernetes with cloud provider services.
+- Handles:
+  - Provisioning cloud load balancers
+  - Managing persistent storage volumes
+  - Adding or removing nodes dynamically
 
+---
 
-    #### 1. Kube-proxy: 
+## Worker Node
 
-    Kube-Proxy is responsible for managing network communication between services running on different nodes. It:
+Worker nodes run application workloads.
 
-    - Configures network rules to allow seamless communication between Pods.
-    
-    - Facilitates service discovery and load balancing for inter-Pod networking.
+### Components
 
-    - Ensures traffic is routed correctly between nodes and external clients.
+#### 1. kubelet
+- The main node agent.
+- Communicates with the API Server.
+- Responsibilities:
+  - Starts and stops containers
+  - Pulls container images
+  - Ensures Pods match their specifications
 
+---
 
+#### 2. kube-proxy
+- Manages **network rules** on each node.
+- Enables communication between:
+  - Pods
+  - Services
+  - External traffic
+- Implements Services using:
+  - iptables or IPVS
+- **Does not perform actual load balancing logic**
 
-    #### 2. kublete: 
+---
 
-    Kubelet is the primary node-level agent that manages the execution of containers. It:
+#### 3. Container Runtime
+- Executes containers inside Pods.
+- Kubernetes uses **CRI-compatible runtimes**, such as:
+  - `containerd`
+  - `CRI-O`
+- Docker Engine is **not used directly** (removed in Kubernetes v1.24).
 
-    - Continuously communicates with the API Server to receive instructions.
-    
-    - Ensure Pods are running as defined in thier specification.
+---
 
-    - Pulls container images and start the requires containers.
+## Kubernetes Objects
 
-    #### 3. Container Runtime: 
+### Pod
+- Smallest deployable unit in Kubernetes.
+- A Pod can contain one or more containers that share:
+  - Network namespace
+  - Storage volumes
 
-   The container runtime is the software that executes containerized applications within Pods. Kubernetes supports multiple runtime options, including
+---
 
-    - containerd
-    - CRI-O
-    - Docker Engine
+### ReplicaSet
+- Ensures a specified number of Pod replicas are running.
+
+---
+
+### Deployment
+- Manages ReplicaSets.
+- Supports:
+  - Rolling updates
+  - Rollbacks
+  - Scaling
+
+---
+
+### Service
+- Provides a **stable network endpoint** for Pods.
+- Enables internal and external access.
+
+---
+
+## Commands
+
+### kind
+- Runs Kubernetes **inside Docker containers**.
+- Commonly used for local clusters.
+
+```bash
+kind create cluster -f cluster.yml
+```
+
+### kubectl
+
+Command-line tool to interact with **the Kubernetes API Server**.
+```
+kubectl get pods
+kubectl get replicasets
+kubectl get deployments
+kubectl describe pod <pod-name>
+kubectl apply -f pod.yaml
+kubectl run nginx --image=nginx
+```
+
