@@ -38,7 +38,7 @@ The Control Plane manages the entire cluster and makes global decisions.
   - Automation tools
 - Validates and processes REST API requests.
 
----
+--- 
 
 #### 2. etcd (Distributed Key-Value Store)
 - The **single source of truth** for the cluster.
@@ -144,6 +144,21 @@ Worker nodes run application workloads.
   - Rolling updates
   - Rollbacks
   - Scaling
+- Role of deployment
+Deployment ensures that there is a smooth deployment, and if the new image fails for some reason, the old replicaset is maintained.
+Even though the rs is what does pod management , deployment is what does rs management
+
+
+#### Checkout the history of deployment
+```
+kubectl rollout history deployment/nginx-deployment
+```
+
+
+#### Undo the last deployment
+```
+Kubectl rollout undo deployment/nginx-deployment
+```
 
 ---
 
